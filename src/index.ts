@@ -1,12 +1,19 @@
 import express, { Request, Response } from "express";
-import dotenv from "dotenv";
+import { config } from "./config/env";
+import { setupSecurityMiddleware } from "./middleware/security";
+import { setupLoggingMiddleware } from "./middleware/logging";
+import { notFoundHandler, errorHandler } from "./middleware/errorHandler";
 
-dotenv.config();
-
+// Express 앱 생성
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// 미들웨어
+// 보안 미들웨어 (가장 먼저 적용)
+setupSecurityMiddleware(app);
+
+// 로깅 미들웨어
+setupLoggingMiddleware(app);
+
+// Body 파싱 미들웨어
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -16,6 +23,7 @@ app.get("/", (req: Request, res: Response) => {
     message: "Shortglish Backend API",
     status: "running",
     timestamp: new Date().toISOString(),
+    environment: config.nodeEnv,
   });
 });
 
@@ -24,11 +32,58 @@ app.get("/health", (req: Request, res: Response) => {
   res.json({
     status: "healthy",
     uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+    },
   });
 });
 
+// 404 핸들러 (모든 라우트 이후)
+app.use(notFoundHandler);
+
+// 전역 에러 핸들러 (가장 마지막)
+app.use(errorHandler);
+
 // 서버 시작
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
+const server = app.listen(config.port, () => {
+  console.log(`🚀 Server is running on port ${config.port}`);
+  console.log(`📍 Environment: ${config.nodeEnv}`);
+  console.log(`🔒 Security: Helmet, CORS, Rate Limiting enabled`);
+});
+
+// Graceful Shutdown 처리
+const gracefulShutdown = (signal: string) => {
+  console.log(`\n${signal} signal received: closing HTTP server`);
+
+  server.close(() => {
+    console.log("HTTP server closed");
+    process.exit(0);
+  });
+
+  // 강제 종료 타임아웃 (10초)
+  setTimeout(() => {
+    console.error("Forced shutdown after timeout");
+    process.exit(1);
+  }, 10000);
+};
+
+// 시그널 핸들러 등록
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+// 처리되지 않은 Promise Rejection 처리
+process.on(
+  "unhandledRejection",
+  (reason: unknown, promise: Promise<unknown>) => {
+    console.error("Unhandled Rejection at:", promise, "reason:", reason);
+    gracefulShutdown("unhandledRejection");
+  }
+);
+
+// 처리되지 않은 Exception 처리
+process.on("uncaughtException", (error: Error) => {
+  console.error("Uncaught Exception:", error);
+  gracefulShutdown("uncaughtException");
 });

@@ -9,6 +9,8 @@ dist/
 .env
 .env.local
 .env.*.local
+# .env.sample은 예외 (템플릿 파일이므로 버전 관리 필요)
+!.env.sample
 
 # Logs
 logs
