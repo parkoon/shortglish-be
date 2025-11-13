@@ -40,6 +40,13 @@ app.get("/health", (req: Request, res: Response) => {
   });
 });
 
+// 토스 로그인 라우트
+import tossAuthRoutes from "./routes/toss/auth.routes";
+import tossUserRoutes from "./routes/toss/user.routes";
+
+app.use("/api/toss/auth", tossAuthRoutes);
+app.use("/api/toss/user", tossUserRoutes);
+
 // 404 핸들러 (모든 라우트 이후)
 app.use(notFoundHandler);
 
