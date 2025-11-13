@@ -12,7 +12,7 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
-  PORT: z.string().default("3000"),
+  PORT: z.string().default("4000"),
 
   // CORS 설정 (쉼표로 구분된 도메인 목록)
   ALLOWED_ORIGINS: z.string().optional(),
@@ -20,6 +20,13 @@ const envSchema = z.object({
   // Rate Limiting 설정 (선택사항)
   RATE_LIMIT_WINDOW_MS: z.string().optional(),
   RATE_LIMIT_MAX: z.string().optional(),
+
+  // 토스 로그인 설정
+  TOSS_API_BASE_URL: z.string().default("https://apps-in-toss-api.toss.im"),
+  TOSS_DECRYPTION_KEY: z.string().optional(), // Base64 인코딩된 복호화 키
+  TOSS_AAD: z.string().default("TOSS"), // Additional Authenticated Data
+  TOSS_CALLBACK_BASIC_AUTH_USERNAME: z.string().optional(),
+  TOSS_CALLBACK_BASIC_AUTH_PASSWORD: z.string().optional(),
 });
 
 /**
@@ -40,6 +47,15 @@ export const config = {
       ? parseInt(env.RATE_LIMIT_WINDOW_MS, 10)
       : 15 * 60 * 1000, // 기본 15분
     max: env.RATE_LIMIT_MAX ? parseInt(env.RATE_LIMIT_MAX, 10) : 100, // 기본 100회
+  },
+  toss: {
+    apiBaseUrl: env.TOSS_API_BASE_URL,
+    decryptionKey: env.TOSS_DECRYPTION_KEY,
+    aad: env.TOSS_AAD,
+    callback: {
+      basicAuthUsername: env.TOSS_CALLBACK_BASIC_AUTH_USERNAME,
+      basicAuthPassword: env.TOSS_CALLBACK_BASIC_AUTH_PASSWORD,
+    },
   },
 } as const;
 
