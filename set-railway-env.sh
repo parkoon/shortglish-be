@@ -64,6 +64,20 @@ if [ -n "$ALLOWED_ORIGINS" ]; then
     echo "  ✅ ALLOWED_ORIGINS 설정 완료"
 fi
 
+# SUPABASE_URL 설정
+if [ -n "$SUPABASE_URL" ]; then
+    echo "  - SUPABASE_URL 설정 중..."
+    railway variables --set "SUPABASE_URL=$SUPABASE_URL"
+    echo "  ✅ SUPABASE_URL 설정 완료"
+fi
+
+# SUPABASE_SERVICE_ROLE_KEY 설정
+if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+    echo "  - SUPABASE_SERVICE_ROLE_KEY 설정 중..."
+    railway variables --set "SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY"
+    echo "  ✅ SUPABASE_SERVICE_ROLE_KEY 설정 완료"
+fi
+
 # NODE_ENV 설정
 echo "  - NODE_ENV 설정 중..."
 railway variables --set "NODE_ENV=production"

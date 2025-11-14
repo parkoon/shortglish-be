@@ -17,25 +17,29 @@ setupLoggingMiddleware(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+import { sendSuccess } from "./utils/apiResponse";
+
 // 기본 라우트
 app.get("/", (req: Request, res: Response) => {
-  res.json({
-    message: "Shortglish Backend API",
-    status: "running",
-    timestamp: new Date().toISOString(),
-    environment: config.nodeEnv,
+  sendSuccess(res, {
+    data: {
+      message: "Shortglish Backend API",
+      status: "running",
+      environment: config.nodeEnv,
+    },
   });
 });
 
 // Health check 엔드포인트 (Railway 모니터링용)
 app.get("/health", (req: Request, res: Response) => {
-  res.json({
-    status: "healthy",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    memory: {
-      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
-      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+  sendSuccess(res, {
+    data: {
+      status: "healthy",
+      uptime: process.uptime(),
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+      },
     },
   });
 });
@@ -46,6 +50,11 @@ import tossUserRoutes from "./routes/toss/user.routes";
 
 app.use("/api/toss/auth", tossAuthRoutes);
 app.use("/api/toss/user", tossUserRoutes);
+
+// 사용자 관리 라우트
+import userRoutes from "./routes/user.routes";
+
+app.use("/api/users", userRoutes);
 
 // 404 핸들러 (모든 라우트 이후)
 app.use(notFoundHandler);

@@ -28,6 +28,7 @@ export function notFoundHandler(
   next: NextFunction
 ): void {
   res.status(404).json({
+    success: false,
     error: "Not Found",
     message: `Cannot ${req.method} ${req.path}`,
     path: req.path,
@@ -48,6 +49,7 @@ export function errorHandler(
   // AppError 인스턴스인 경우
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
+      success: false,
       error: err.message,
       ...(config.nodeEnv === "development" && {
         stack: err.stack,
@@ -66,6 +68,7 @@ export function errorHandler(
   });
 
   res.status(500).json({
+    success: false,
     error:
       config.nodeEnv === "production"
         ? "Internal Server Error"

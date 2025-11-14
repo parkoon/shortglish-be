@@ -32,6 +32,9 @@ const envSchema = z.object({
   TOSS_MTLS_KEY_PATH: z.string().optional(), // 키 파일 경로
   TOSS_MTLS_CERT_BASE64: z.string().optional(), // Base64 인코딩된 인증서 (Railway용)
   TOSS_MTLS_KEY_BASE64: z.string().optional(), // Base64 인코딩된 키 (Railway용)
+  // Supabase 설정
+  SUPABASE_URL: z.string().optional(), // Supabase 프로젝트 URL
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(), // Supabase Service Role Key
 });
 
 /**
@@ -67,6 +70,10 @@ export const config = {
       certBase64: env.TOSS_MTLS_CERT_BASE64,
       keyBase64: env.TOSS_MTLS_KEY_BASE64,
     },
+  },
+  supabase: {
+    url: env.SUPABASE_URL || "",
+    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY || "",
   },
 } as const;
 

@@ -11,6 +11,7 @@ import {
   RemoveByUserKeyRequest,
 } from "../../utils/types/toss.types";
 import { AppError } from "../../middleware/errorHandler";
+import { sendSuccess } from "../../utils/apiResponse";
 
 /**
  * AccessToken 발급
@@ -25,10 +26,7 @@ export const generateTokenHandler = async (
     const { authorizationCode, referrer } = req.body;
 
     if (!authorizationCode || !referrer) {
-      throw new AppError(
-        400,
-        "authorizationCode와 referrer는 필수입니다."
-      );
+      throw new AppError(400, "authorizationCode와 referrer는 필수입니다.");
     }
 
     const request: GenerateTokenRequest = {
@@ -38,9 +36,9 @@ export const generateTokenHandler = async (
 
     const result = await generateToken(request);
 
-    res.json({
-      resultType: "SUCCESS",
-      success: result,
+    sendSuccess(res, {
+      data: result,
+      message: "토큰이 성공적으로 발급되었습니다.",
     });
   } catch (error) {
     next(error);
@@ -69,9 +67,9 @@ export const refreshTokenHandler = async (
 
     const result = await refreshToken(request);
 
-    res.json({
-      resultType: "SUCCESS",
-      success: result,
+    sendSuccess(res, {
+      data: result,
+      message: "토큰이 성공적으로 재발급되었습니다.",
     });
   } catch (error) {
     next(error);
@@ -97,11 +95,9 @@ export const removeByAccessTokenHandler = async (
     const accessToken = authHeader.substring(7);
     await removeByAccessToken(accessToken);
 
-    res.json({
-      resultType: "SUCCESS",
-      success: {
-        message: "로그인 연결이 해제되었습니다.",
-      },
+    sendSuccess(res, {
+      data: null,
+      message: "로그인 연결이 해제되었습니다.",
     });
   } catch (error) {
     next(error);
@@ -136,9 +132,9 @@ export const removeByUserKeyHandler = async (
 
     const result = await removeByUserKey(request, accessToken);
 
-    res.json({
-      resultType: "SUCCESS",
-      success: result,
+    sendSuccess(res, {
+      data: result || { userKey },
+      message: "로그인 연결이 해제되었습니다.",
     });
   } catch (error) {
     next(error);
@@ -188,13 +184,9 @@ export const callbackHandler = async (
     // TODO: 실제 비즈니스 로직 구현
     // 예: await userService.removeUserConnection(userKey, referrer);
 
-    res.json({
-      resultType: "SUCCESS",
-      success: {
-        message: "콜백이 성공적으로 처리되었습니다.",
-        userKey,
-        referrer,
-      },
+    sendSuccess(res, {
+      data: { userKey, referrer },
+      message: "콜백이 성공적으로 처리되었습니다.",
     });
   } catch (error) {
     next(error);
