@@ -78,6 +78,7 @@ export const upsertUser = async (request: UpsertUserRequest): Promise<User> => {
         nationality: request.nationality,
         email: request.email,
         agreed_terms: request.agreedTerms,
+        deleted_at: null, // 재로그인 시 deleted_at을 null로 복구
         last_login_at: new Date().toISOString(), // 로그인 시점 업데이트
         updated_at: new Date().toISOString(),
       },
@@ -120,6 +121,31 @@ export const upsertUser = async (request: UpsertUserRequest): Promise<User> => {
 };
 
 /**
+ * 사용자 약관 동의 초기화
+ */
+export const clearAgreedTerms = async (
+  authProvider: string,
+  externalUserId: string
+): Promise<void> => {
+  if (!authProvider || !externalUserId) {
+    throw new AppError(400, "authProvider와 externalUserId는 필수입니다.");
+  }
+
+  const { error } = await supabase
+    .from("users")
+    .update({
+      agreed_terms: [],
+      updated_at: new Date().toISOString(),
+    })
+    .eq("auth_provider", authProvider)
+    .eq("external_user_id", externalUserId);
+
+  if (error) {
+    throw new AppError(500, `약관 동의 초기화 실패: ${error.message}`);
+  }
+};
+
+/**
  * 사용자 탈퇴 (Soft Delete)
  */
 export const deleteUser = async (
@@ -141,4 +167,3 @@ export const deleteUser = async (
     throw new AppError(500, `사용자 탈퇴 실패: ${error.message}`);
   }
 };
-

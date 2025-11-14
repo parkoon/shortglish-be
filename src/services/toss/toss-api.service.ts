@@ -85,7 +85,6 @@ export const generateToken = async (
         referrer: request.referrer,
       }
     );
-    console.log("🚀 ~ generateToken ~ response:", response);
 
     if (response.data.resultType === "FAIL" || response.data.error) {
       const error = response.data.error;

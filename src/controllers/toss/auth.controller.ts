@@ -9,7 +9,9 @@ import {
   GenerateTokenRequest,
   RefreshTokenRequest,
   RemoveByUserKeyRequest,
+  ReferrerType,
 } from "../../utils/types/toss.types";
+import { deleteUser, clearAgreedTerms } from "../../services/user.service";
 import { AppError } from "../../middleware/errorHandler";
 import { sendSuccess } from "../../utils/apiResponse";
 
@@ -158,14 +160,75 @@ export const callbackHandler = async (
     }
 
     const userKey = Number(userKeyBody);
-    const referrer = String(referrerBody);
+    const referrer = String(referrerBody) as ReferrerType;
 
-    // 여기서 사용자 연결 해제 처리 로직 구현
-    // 예: 데이터베이스에서 사용자 정보 삭제, 세션 무효화 등
     console.log(`[TOSS Callback] userKey: ${userKey}, referrer: ${referrer}`);
 
-    // TODO: 실제 비즈니스 로직 구현
-    // 예: await userService.removeUserConnection(userKey, referrer);
+    const authProvider = "TOSS";
+    const externalUserId = String(userKey);
+
+    // referrer 타입에 따라 다르게 처리 (early return 패턴)
+    if (referrer === "WITHDRAWAL_TERMS") {
+      // 약관 철회: agreed_terms 초기화
+      try {
+        await clearAgreedTerms(authProvider, externalUserId);
+        console.log(
+          `[TOSS Callback] User agreed_terms cleared: userKey=${userKey}, referrer=${referrer}`
+        );
+      } catch (error) {
+        console.error(
+          `[TOSS Callback] Failed to clear agreed_terms: userKey=${userKey}`,
+          error
+        );
+        // 에러가 발생해도 콜백은 성공으로 응답 (토스에 재시도 방지)
+      }
+
+      sendSuccess(res, {
+        data: { userKey, referrer },
+        message: "콜백이 성공적으로 처리되었습니다.",
+      });
+      return;
+    }
+
+    if (referrer === "WITHDRAWAL_TOSS") {
+      // 토스 회원 탈퇴: soft delete 수행
+      try {
+        await deleteUser(authProvider, externalUserId);
+        console.log(
+          `[TOSS Callback] User soft deleted: userKey=${userKey}, referrer=${referrer}`
+        );
+      } catch (error) {
+        console.error(
+          `[TOSS Callback] Failed to soft delete user: userKey=${userKey}`,
+          error
+        );
+        // 에러가 발생해도 콜백은 성공으로 응답 (토스에 재시도 방지)
+      }
+
+      sendSuccess(res, {
+        data: { userKey, referrer },
+        message: "콜백이 성공적으로 처리되었습니다.",
+      });
+      return;
+    }
+
+    if (referrer === "UNLINK") {
+      // 연결 끊기: deleted_at 설정 안 함 (사용자가 다시 로그인할 수 있도록)
+      console.log(
+        `[TOSS Callback] User unlinked (no soft delete): userKey=${userKey}`
+      );
+
+      sendSuccess(res, {
+        data: { userKey, referrer },
+        message: "콜백이 성공적으로 처리되었습니다.",
+      });
+      return;
+    }
+
+    // DEFAULT, sandbox 등 기타 케이스: 로그만 남김
+    console.log(
+      `[TOSS Callback] Unknown referrer type: userKey=${userKey}, referrer=${referrer}`
+    );
 
     sendSuccess(res, {
       data: { userKey, referrer },
