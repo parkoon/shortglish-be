@@ -179,6 +179,10 @@ ALLOWED_ORIGINS=<프로덕션 도메인>
 - 로컬 개발 시 파일 권한 설정: `chmod 400 certs/*.pem` (읽기 전용)
 - Base64 인코딩된 값도 민감한 정보이므로 안전하게 관리하세요
 
+## API 문서
+
+- **Swagger UI**: `/api/docs` - 인터랙티브 API 문서 (로컬: http://localhost:4000/api/docs, 프로덕션: https://shortglish-be-production.up.railway.app/api/docs)
+
 ## 클라이언트 연동
 
 - [클라이언트 연동 가이드](./docs/CLIENT_INTEGRATION.md) - 토스 로그인 API 연동

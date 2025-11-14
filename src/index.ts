@@ -3,6 +3,8 @@ import { config } from "./config/env";
 import { setupSecurityMiddleware } from "./middleware/security";
 import { setupLoggingMiddleware } from "./middleware/logging";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger";
 
 // Express 앱 생성
 const app = express();
@@ -43,6 +45,17 @@ app.get("/health", (req: Request, res: Response) => {
     },
   });
 });
+
+// Swagger API 문서
+const swaggerDocument = swaggerSpec;
+app.use(
+  "/api/docs",
+  ...(swaggerUi.serve as any),
+  swaggerUi.setup(swaggerDocument, {
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "Shortglish API Documentation",
+  }) as any
+);
 
 // 토스 로그인 라우트
 import tossAuthRoutes from "./routes/toss/auth.routes";

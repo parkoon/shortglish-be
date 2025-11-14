@@ -143,7 +143,6 @@ export const removeByUserKeyHandler = async (
 
 /**
  * 콜백 처리 (토스에서 호출)
- * GET /api/toss/auth/callback
  * POST /api/toss/auth/callback
  */
 export const callbackHandler = async (
@@ -152,30 +151,14 @@ export const callbackHandler = async (
   next: NextFunction
 ) => {
   try {
-    let userKey: number;
-    let referrer: string;
+    const { userKey: userKeyBody, referrer: referrerBody } = req.body;
 
-    // GET 방식 처리
-    if (req.method === "GET") {
-      const { userKey: userKeyParam, referrer: referrerParam } = req.query;
-
-      if (!userKeyParam || !referrerParam) {
-        throw new AppError(400, "userKey와 referrer는 필수입니다.");
-      }
-
-      userKey = Number(userKeyParam);
-      referrer = String(referrerParam);
-    } else {
-      // POST 방식 처리
-      const { userKey: userKeyBody, referrer: referrerBody } = req.body;
-
-      if (!userKeyBody || !referrerBody) {
-        throw new AppError(400, "userKey와 referrer는 필수입니다.");
-      }
-
-      userKey = Number(userKeyBody);
-      referrer = String(referrerBody);
+    if (!userKeyBody || !referrerBody) {
+      throw new AppError(400, "userKey와 referrer는 필수입니다.");
     }
+
+    const userKey = Number(userKeyBody);
+    const referrer = String(referrerBody);
 
     // 여기서 사용자 연결 해제 처리 로직 구현
     // 예: 데이터베이스에서 사용자 정보 삭제, 세션 무효화 등
