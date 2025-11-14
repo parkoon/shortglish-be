@@ -116,3 +116,61 @@ export type ReferrerType =
   | "WITHDRAWAL_TOSS"
   | "DEFAULT"
   | "sandbox";
+
+// 푸시 메시지 관련 타입
+export type SendMessageRequest = {
+  userKey: number;
+  templateSetCode: string;
+  context: Record<string, unknown>;
+};
+
+export type MessageContent = {
+  contentId: string;
+  reachFailReason?: string;
+};
+
+export type MessageDetail = {
+  sentPush?: MessageContent[];
+  sentInbox?: MessageContent[];
+  sentSms?: MessageContent[];
+  sentAlimtalk?: MessageContent[];
+  sentFriendtalk?: MessageContent[];
+};
+
+export type MessageFail = {
+  sentPush?: MessageContent[];
+  sentInbox?: MessageContent[];
+  sentSms?: MessageContent[];
+  sentAlimtalk?: MessageContent[];
+  sentFriendtalk?: MessageContent[];
+};
+
+export type MessageResult = {
+  msgCount: number;
+  sentPushCount: number;
+  sentInboxCount: number;
+  sentSmsCount: number;
+  sentAlimtalkCount: number;
+  sentFriendtalkCount: number;
+  detail?: MessageDetail;
+  fail?: MessageFail;
+};
+
+export type SendMessageResponse = {
+  resultType:
+    | "SUCCESS"
+    | "HTTP_TIMEOUT"
+    | "NETWORK_ERROR"
+    | "EXECUTION_FAIL"
+    | "INTERRUPTED"
+    | "INTERNAL_ERROR"
+    | "FAIL";
+  result?: MessageResult;
+  error?: {
+    errorType?: number;
+    errorCode?: string;
+    reason?: string;
+    data?: Record<string, unknown>;
+    title?: string;
+  };
+};
