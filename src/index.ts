@@ -82,6 +82,19 @@ const server = app.listen(config.port, () => {
   console.log(`🚀 Server is running on port ${config.port}`);
   console.log(`📍 Environment: ${config.nodeEnv}`);
   console.log(`🔒 Security: Helmet, CORS, Rate Limiting enabled`);
+
+  // ALLOWED_ORIGINS 출력
+  if (config.allowedOrigins.length > 0) {
+    console.log(`🌐 Allowed Origins: ${config.allowedOrigins.join(", ")}`);
+  } else {
+    console.log(
+      `🌐 Allowed Origins: ${
+        config.nodeEnv === "production"
+          ? "None (CORS disabled - production requires explicit origins)"
+          : "All origins (development mode)"
+      }`
+    );
+  }
 });
 
 // Graceful Shutdown 처리
