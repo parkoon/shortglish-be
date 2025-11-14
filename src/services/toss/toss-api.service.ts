@@ -10,17 +10,21 @@ import {
   RemoveTokenResponse,
 } from "../../utils/types/toss.types";
 import { AppError } from "../../middleware/errorHandler";
+import { createMtlsAgent } from "../../utils/mtls";
 
 /**
  * 토스 API axios 인스턴스 생성
  */
 const createTossApiClient = (): AxiosInstance => {
+  const httpsAgent = createMtlsAgent();
+
   const client = axios.create({
     baseURL: config.toss.apiBaseUrl,
     timeout: 10000, // 10초 타임아웃
     headers: {
       "Content-Type": "application/json",
     },
+    ...(httpsAgent && { httpsAgent }), // mTLS 인증서가 있으면 적용
   });
 
   // 응답 인터셉터: 에러 처리
@@ -146,6 +150,7 @@ export const refreshToken = async (
 
 /**
  * 사용자 정보 조회
+ *
  * AccessToken으로 사용자 정보를 조회합니다.
  */
 export const getUserInfo = async (

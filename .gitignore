@@ -37,3 +37,11 @@ coverage/
 # Misc
 *.pem
 
+# mTLS 인증서 파일
+certs/
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+
