@@ -27,6 +27,11 @@ const envSchema = z.object({
   TOSS_AAD: z.string().default("TOSS"), // Additional Authenticated Data
   TOSS_CALLBACK_BASIC_AUTH_USERNAME: z.string().optional(),
   TOSS_CALLBACK_BASIC_AUTH_PASSWORD: z.string().optional(),
+  // mTLS 인증서 설정
+  TOSS_MTLS_CERT_PATH: z.string().optional(), // 인증서 파일 경로
+  TOSS_MTLS_KEY_PATH: z.string().optional(), // 키 파일 경로
+  TOSS_MTLS_CERT_BASE64: z.string().optional(), // Base64 인코딩된 인증서 (Railway용)
+  TOSS_MTLS_KEY_BASE64: z.string().optional(), // Base64 인코딩된 키 (Railway용)
 });
 
 /**
@@ -55,6 +60,12 @@ export const config = {
     callback: {
       basicAuthUsername: env.TOSS_CALLBACK_BASIC_AUTH_USERNAME,
       basicAuthPassword: env.TOSS_CALLBACK_BASIC_AUTH_PASSWORD,
+    },
+    mtls: {
+      certPath: env.TOSS_MTLS_CERT_PATH || "certs/client-cert.pem",
+      keyPath: env.TOSS_MTLS_KEY_PATH || "certs/client-key.pem",
+      certBase64: env.TOSS_MTLS_CERT_BASE64,
+      keyBase64: env.TOSS_MTLS_KEY_BASE64,
     },
   },
 } as const;
