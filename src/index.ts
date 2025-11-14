@@ -60,9 +60,11 @@ app.use(
 // 토스 로그인 라우트
 import tossAuthRoutes from "./routes/toss/auth.routes";
 import tossUserRoutes from "./routes/toss/user.routes";
+import tossPushRoutes from "./routes/toss/push.routes";
 
 app.use("/api/toss/auth", tossAuthRoutes);
 app.use("/api/toss/user", tossUserRoutes);
+app.use("/api/toss/push", tossPushRoutes);
 
 // 사용자 관리 라우트
 import userRoutes from "./routes/user.routes";

@@ -175,6 +175,10 @@ const options: swaggerJsdoc.Options = {
         name: 'Toss User',
         description: '토스 사용자 정보 API',
       },
+      {
+        name: 'Toss Push',
+        description: '토스 푸시 메시지 API',
+      },
     ],
   },
   apis: [

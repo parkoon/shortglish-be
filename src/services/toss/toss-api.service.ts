@@ -8,6 +8,8 @@ import {
   UserInfoResponse,
   RemoveByUserKeyRequest,
   RemoveTokenResponse,
+  SendMessageRequest,
+  SendMessageResponse,
 } from "../../utils/types/toss.types";
 import { AppError } from "../../middleware/errorHandler";
 import { createMtlsAgent } from "../../utils/mtls";
@@ -275,6 +277,61 @@ export const removeByUserKey = async (
     throw new AppError(
       500,
       "로그인 연결 끊기 중 예상치 못한 오류가 발생했습니다."
+    );
+  }
+};
+
+/**
+ * 푸시 메시지 발송
+ *
+ * @param request 메시지 발송 요청 (userKey, templateSetCode, context)
+ * @returns 메시지 발송 결과
+ */
+export const sendPushMessage = async (
+  request: SendMessageRequest
+): Promise<SendMessageResponse["result"]> => {
+  if (!request.userKey) {
+    throw new AppError(400, "userKey는 필수입니다.");
+  }
+
+  if (!request.templateSetCode || !request.context) {
+    throw new AppError(400, "templateSetCode와 context는 필수입니다.");
+  }
+
+  try {
+    const response = await tossApiClient.post<SendMessageResponse>(
+      "/api-partner/v1/apps-in-toss/messenger/send-message",
+      {
+        templateSetCode: request.templateSetCode,
+        context: request.context,
+      },
+      {
+        headers: {
+          "x-toss-user-key": `${request.userKey}`,
+        },
+      }
+    );
+
+    if (response.data.resultType !== "SUCCESS" || response.data.error) {
+      const error = response.data.error;
+      throw new AppError(
+        500,
+        error?.reason || "푸시 메시지 발송 중 오류가 발생했습니다."
+      );
+    }
+
+    if (!response.data.result) {
+      throw new AppError(500, "푸시 메시지 발송 응답이 올바르지 않습니다.");
+    }
+
+    return response.data.result;
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    throw new AppError(
+      500,
+      "푸시 메시지 발송 중 예상치 못한 오류가 발생했습니다."
     );
   }
 };
