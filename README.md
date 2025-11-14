@@ -179,7 +179,30 @@ ALLOWED_ORIGINS=<프로덕션 도메인>
 - 로컬 개발 시 파일 권한 설정: `chmod 400 certs/*.pem` (읽기 전용)
 - Base64 인코딩된 값도 민감한 정보이므로 안전하게 관리하세요
 
+## 클라이언트 연동
+
+- [클라이언트 연동 가이드](./docs/CLIENT_INTEGRATION.md) - 토스 로그인 API 연동
+- [클라이언트 사용자 관리 가이드](./docs/CLIENT_USER_MANAGEMENT.md) - 사용자 관리 API 연동
+
 ## API 엔드포인트
+
+### 기본 엔드포인트
 
 - `GET /`: 기본 정보
 - `GET /health`: 헬스 체크
+
+### 토스 로그인 API
+
+- `POST /api/toss/auth/generate-token` - AccessToken 발급
+- `POST /api/toss/auth/refresh-token` - AccessToken 재발급
+- `POST /api/toss/auth/remove-by-access-token` - AccessToken으로 연결 끊기
+- `POST /api/toss/auth/remove-by-user-key` - userKey로 연결 끊기
+- `GET /api/toss/user/me` - 사용자 정보 조회 (암호화)
+- `GET /api/toss/user/me/decrypted` - 사용자 정보 조회 및 복호화 (자동 Supabase 저장)
+- `POST /api/toss/user/decrypt` - 사용자 정보 복호화
+
+### 사용자 관리 API (Supabase)
+
+- `GET /api/users/me` - Supabase에서 사용자 정보 조회
+- `POST /api/users/me` - 토스 정보로 사용자 정보 동기화
+- `DELETE /api/users/me` - 사용자 탈퇴 (Soft Delete)

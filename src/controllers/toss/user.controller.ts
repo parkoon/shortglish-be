@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { getUserInfo } from "../../services/toss/toss-api.service";
 import { decryptUserInfo } from "../../services/toss/decryption.service";
 import { AppError } from "../../middleware/errorHandler";
+import { sendSuccess } from "../../utils/apiResponse";
 
 /**
  * Authorization 헤더에서 AccessToken 추출
@@ -26,9 +27,8 @@ export const getUserInfoHandler = async (
     const accessToken = extractAccessToken(req.headers.authorization);
     const userInfo = await getUserInfo(accessToken);
 
-    res.json({
-      resultType: "SUCCESS",
-      success: userInfo,
+    sendSuccess(res, {
+      data: userInfo,
     });
   } catch (error) {
     next(error);
@@ -68,10 +68,7 @@ export const decryptUserInfoHandler = async (
       !nationality &&
       !email
     ) {
-      throw new AppError(
-        400,
-        "복호화할 필드가 하나 이상 필요합니다."
-      );
+      throw new AppError(400, "복호화할 필드가 하나 이상 필요합니다.");
     }
 
     const encryptedUserInfo = {
@@ -90,9 +87,8 @@ export const decryptUserInfoHandler = async (
       aad
     );
 
-    res.json({
-      resultType: "SUCCESS",
-      success: decryptedInfo,
+    sendSuccess(res, {
+      data: decryptedInfo,
     });
   } catch (error) {
     next(error);
@@ -128,9 +124,8 @@ export const getDecryptedUserInfoHandler = async (
       email: userInfo.email,
     });
 
-    res.json({
-      resultType: "SUCCESS",
-      success: {
+    sendSuccess(res, {
+      data: {
         userKey: userInfo.userKey,
         scope: userInfo.scope,
         agreedTerms: userInfo.agreedTerms,
