@@ -289,7 +289,7 @@ export const removeByUserKey = async (
  */
 export const sendPushMessage = async (
   request: SendMessageRequest
-): Promise<SendMessageResponse["result"]> => {
+): Promise<SendMessageResponse["success"]> => {
   if (!request.userKey) {
     throw new AppError(400, "userKey는 필수입니다.");
   }
@@ -320,11 +320,13 @@ export const sendPushMessage = async (
       );
     }
 
-    if (!response.data.result) {
+    console.log("response.data", response.data);
+
+    if (!response.data.success) {
       throw new AppError(500, "푸시 메시지 발송 응답이 올바르지 않습니다.");
     }
 
-    return response.data.result;
+    return response.data.success;
   } catch (error) {
     if (error instanceof AppError) {
       throw error;

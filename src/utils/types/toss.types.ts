@@ -165,7 +165,7 @@ export type SendMessageResponse = {
     | "INTERRUPTED"
     | "INTERNAL_ERROR"
     | "FAIL";
-  result?: MessageResult;
+  success?: MessageResult;
   error?: {
     errorType?: number;
     errorCode?: string;
