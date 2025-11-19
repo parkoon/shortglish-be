@@ -20,6 +20,7 @@ const envSchema = z.object({
   // Rate Limiting 설정 (선택사항)
   RATE_LIMIT_WINDOW_MS: z.string().optional(),
   RATE_LIMIT_MAX: z.string().optional(),
+  RATE_LIMIT_EXEMPT_ORIGINS: z.string().optional(), // Rate limit 제외 도메인 (쉼표로 구분)
 
   // 토스 로그인 설정
   TOSS_API_BASE_URL: z.string().default("https://apps-in-toss-api.toss.im"),
@@ -55,6 +56,8 @@ export const config = {
       ? parseInt(env.RATE_LIMIT_WINDOW_MS, 10)
       : 15 * 60 * 1000, // 기본 15분
     max: env.RATE_LIMIT_MAX ? parseInt(env.RATE_LIMIT_MAX, 10) : 100, // 기본 100회
+    exemptOrigins:
+      env.RATE_LIMIT_EXEMPT_ORIGINS?.split(",").filter(Boolean) || [],
   },
   toss: {
     apiBaseUrl: env.TOSS_API_BASE_URL,
@@ -76,4 +79,3 @@ export const config = {
     serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY || "",
   },
 } as const;
-

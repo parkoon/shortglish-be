@@ -16,11 +16,12 @@ export function setupSecurityMiddleware(app: Express): void {
   // CORS: 허용된 도메인만 API 접근 가능
   app.use(
     cors({
-      origin: config.allowedOrigins.length > 0 
-        ? config.allowedOrigins 
-        : config.nodeEnv === "production" 
-        ? false // 프로덕션에서는 반드시 설정 필요
-        : true, // 개발 환경에서는 모든 도메인 허용
+      origin:
+        config.allowedOrigins.length > 0
+          ? config.allowedOrigins
+          : config.nodeEnv === "production"
+          ? false // 프로덕션에서는 반드시 설정 필요
+          : true, // 개발 환경에서는 모든 도메인 허용
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
@@ -36,12 +37,26 @@ export function setupSecurityMiddleware(app: Express): void {
     },
     standardHeaders: true, // `RateLimit-*` 헤더 반환
     legacyHeaders: false, // `X-RateLimit-*` 헤더 비활성화
+
+    // 특정 도메인은 rate limit 제외
+    skip: (req) => {
+      if (config.rateLimit.exemptOrigins.length === 0) {
+        return false;
+      }
+      const origin = req.headers.origin || req.headers.referer;
+      if (!origin) {
+        return false;
+      }
+      // origin이 제외 목록에 있는지 확인
+      return config.rateLimit.exemptOrigins.some((exemptOrigin) =>
+        origin.includes(exemptOrigin)
+      );
+    },
   });
 
   // 모든 API 요청에 Rate Limiting 적용
   app.use("/api/", limiter);
-  
+
   // 루트 경로와 헬스체크는 제외 (모니터링용)
   app.use(limiter);
 }
-
