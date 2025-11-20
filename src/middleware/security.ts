@@ -29,34 +29,34 @@ export function setupSecurityMiddleware(app: Express): void {
   );
 
   // Rate Limiting: DDoS 공격 및 과도한 요청 방지
-  const limiter = rateLimit({
-    windowMs: config.rateLimit.windowMs,
-    max: config.rateLimit.max,
-    message: {
-      error: "Too many requests from this IP, please try again later.",
-    },
-    standardHeaders: true, // `RateLimit-*` 헤더 반환
-    legacyHeaders: false, // `X-RateLimit-*` 헤더 비활성화
+  // const limiter = rateLimit({
+  //   windowMs: config.rateLimit.windowMs,
+  //   max: config.rateLimit.max,
+  //   message: {
+  //     error: "Too many requests from this IP, please try again later.",
+  //   },
+  //   standardHeaders: true, // `RateLimit-*` 헤더 반환
+  //   legacyHeaders: false, // `X-RateLimit-*` 헤더 비활성화
 
-    // 특정 도메인은 rate limit 제외
-    skip: (req) => {
-      if (config.rateLimit.exemptOrigins.length === 0) {
-        return false;
-      }
-      const origin = req.headers.origin || req.headers.referer;
-      if (!origin) {
-        return false;
-      }
-      // origin이 제외 목록에 있는지 확인
-      return config.rateLimit.exemptOrigins.some((exemptOrigin) =>
-        origin.includes(exemptOrigin)
-      );
-    },
-  });
+  //   // 특정 도메인은 rate limit 제외
+  //   skip: (req) => {
+  //     if (config.rateLimit.exemptOrigins.length === 0) {
+  //       return false;
+  //     }
+  //     const origin = req.headers.origin || req.headers.referer;
+  //     if (!origin) {
+  //       return false;
+  //     }
+  //     // origin이 제외 목록에 있는지 확인
+  //     return config.rateLimit.exemptOrigins.some((exemptOrigin) =>
+  //       origin.includes(exemptOrigin)
+  //     );
+  //   },
+  // });
 
   // 모든 API 요청에 Rate Limiting 적용
-  app.use("/api/", limiter);
+  // app.use("/api/", limiter);
 
   // 루트 경로와 헬스체크는 제외 (모니터링용)
-  app.use(limiter);
+  // app.use(limiter);
 }
