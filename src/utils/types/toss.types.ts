@@ -119,9 +119,20 @@ export type ReferrerType =
 
 // 푸시 메시지 관련 타입
 export type SendMessageRequest = {
-  userKey: number;
+  userKeys: number[];
   templateSetCode: string;
   context: Record<string, unknown>;
+};
+
+// 배치 전송 결과 (각 userKey별 결과)
+export type BatchSendMessageResult = {
+  userKey: number;
+  success: boolean;
+  result?: MessageResult;
+  error?: {
+    message: string;
+    code?: string;
+  };
 };
 
 export type MessageContent = {

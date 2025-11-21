@@ -10,6 +10,8 @@ import {
   RemoveTokenResponse,
   SendMessageRequest,
   SendMessageResponse,
+  BatchSendMessageResult,
+  MessageResult,
 } from "../../utils/types/toss.types";
 import { AppError } from "../../middleware/errorHandler";
 import { createMtlsAgent } from "../../utils/mtls";
@@ -282,32 +284,28 @@ export const removeByUserKey = async (
 };
 
 /**
- * 푸시 메시지 발송
+ * 단일 사용자에게 푸시 메시지 발송 (내부 함수)
  *
- * @param request 메시지 발송 요청 (userKey, templateSetCode, context)
+ * @param userKey 사용자 키
+ * @param templateSetCode 템플릿 코드
+ * @param context 컨텍스트 변수
  * @returns 메시지 발송 결과
  */
-export const sendPushMessage = async (
-  request: SendMessageRequest
-): Promise<SendMessageResponse["success"]> => {
-  if (!request.userKey) {
-    throw new AppError(400, "userKey는 필수입니다.");
-  }
-
-  if (!request.templateSetCode || !request.context) {
-    throw new AppError(400, "templateSetCode와 context는 필수입니다.");
-  }
-
+const sendPushMessageToUser = async (
+  userKey: number,
+  templateSetCode: string,
+  context: Record<string, unknown>
+): Promise<MessageResult> => {
   try {
     const response = await tossApiClient.post<SendMessageResponse>(
       "/api-partner/v1/apps-in-toss/messenger/send-message",
       {
-        templateSetCode: request.templateSetCode,
-        context: request.context,
+        templateSetCode,
+        context,
       },
       {
         headers: {
-          "x-toss-user-key": `${request.userKey}`,
+          "x-toss-user-key": `${userKey}`,
         },
       }
     );
@@ -319,8 +317,6 @@ export const sendPushMessage = async (
         error?.reason || "푸시 메시지 발송 중 오류가 발생했습니다."
       );
     }
-
-    console.log("response.data", response.data);
 
     if (!response.data.success) {
       throw new AppError(500, "푸시 메시지 발송 응답이 올바르지 않습니다.");
@@ -336,4 +332,84 @@ export const sendPushMessage = async (
       "푸시 메시지 발송 중 예상치 못한 오류가 발생했습니다."
     );
   }
+};
+
+/**
+ * 배열을 청크로 나누는 헬퍼 함수
+ */
+const chunkArray = <T>(array: T[], chunkSize: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+};
+
+/**
+ * 배치 푸시 메시지 발송
+ * 여러 사용자에게 동시에 푸시 메시지를 발송합니다.
+ * 10개씩 병렬 처리하여 안정성과 성능을 균형있게 유지합니다.
+ *
+ * @param request 메시지 발송 요청 (userKeys 배열, templateSetCode, context)
+ * @returns 각 userKey별 발송 결과 배열
+ */
+export const sendBatchPushMessage = async (
+  request: SendMessageRequest
+): Promise<BatchSendMessageResult[]> => {
+  if (
+    !request.userKeys ||
+    !Array.isArray(request.userKeys) ||
+    request.userKeys.length === 0
+  ) {
+    throw new AppError(400, "userKeys는 필수이며 비어있을 수 없습니다.");
+  }
+
+  if (!request.templateSetCode || !request.context) {
+    throw new AppError(400, "templateSetCode와 context는 필수입니다.");
+  }
+
+  const { userKeys, templateSetCode, context } = request;
+  const BATCH_SIZE = 10; // 한 번에 처리할 최대 개수
+  const results: BatchSendMessageResult[] = [];
+
+  // userKeys를 10개씩 청크로 나누기
+  const chunks = chunkArray(userKeys, BATCH_SIZE);
+
+  // 각 청크를 순차적으로 처리
+  for (const chunk of chunks) {
+    // 청크 내에서는 병렬 처리
+    const chunkResults = await Promise.allSettled(
+      chunk.map((userKey) =>
+        sendPushMessageToUser(userKey, templateSetCode, context)
+      )
+    );
+
+    // 결과를 BatchSendMessageResult 형식으로 변환
+    chunk.forEach((userKey, index) => {
+      const result = chunkResults[index];
+      if (result.status === "fulfilled") {
+        results.push({
+          userKey,
+          success: true,
+          result: result.value,
+        });
+      } else {
+        const error = result.reason;
+        results.push({
+          userKey,
+          success: false,
+          error: {
+            message:
+              error instanceof AppError
+                ? error.message
+                : "푸시 메시지 발송 중 예상치 못한 오류가 발생했습니다.",
+            code:
+              error instanceof AppError ? String(error.statusCode) : undefined,
+          },
+        });
+      }
+    });
+  }
+
+  return results;
 };
